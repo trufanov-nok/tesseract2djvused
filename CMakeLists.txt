@@ -25,6 +25,7 @@ FIND_PACKAGE(Qt5Xml ${Qt_MIN_VERSION} REQUIRED)
 
 SET( sources
      main.cpp
+     hocr2djvused.cpp
 )
 
 ADD_EXECUTABLE(tesseract2djvused ${sources} )
