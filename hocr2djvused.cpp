@@ -54,7 +54,7 @@ void hOCR2DjVuSed(const QDomElement& el, QTextStream& ts, int indent)
             // (0,0) point is top-left in hOCR and bottom-left in djvused
             assert(_cur_page_h > 0);
             const int h = y1-y0;
-            y0 = _cur_page_h - y0 + h;
+            y0 = _cur_page_h - y0 - h;
             y1 = _cur_page_h - y1 + h;
         }
 
