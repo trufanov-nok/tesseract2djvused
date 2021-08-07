@@ -28,41 +28,46 @@ void hOCR2DjVuSed(const QDomElement& el, QTextStream& ts, int indent)
     QString res = indent_str;
 
     const QString cls = el.attribute("class");
-    assert(_dict.contains(cls));
-    const QString id = _dict[cls];
-    res += "( " + id + " ";
-    const bool is_page = id == "page";
-
+    QString id;
     QString bbox;
-    const QString title = el.attribute("title");
-    QRegularExpressionMatch match = _bbox_rex.match(title);
-    if (match.hasMatch() && match.capturedLength() >= 5) {
-        int x0, y0, x1, y1;
-        bool ok;
-        x0 = match.captured(1).toInt(&ok);
-        assert(ok);
-        y0 = match.captured(2).toInt(&ok);
-        assert(ok);
-        x1 = match.captured(3).toInt(&ok);
-        assert(ok);
-        y1 = match.captured(4).toInt(&ok);
-        assert(ok);
 
-        if (is_page) {
-            _cur_page_h = y1;
-        } else {
-            // (0,0) point is top-left in hOCR and bottom-left in djvused
-            assert(_cur_page_h > 0);
-            const int h = y1-y0;
-            y0 = _cur_page_h - y0 - h;
-            y1 = _cur_page_h - y1 + h;
+    const bool ignore = !_dict.contains(cls);
+    if (!ignore) {
+        id = _dict[cls];
+        res += "( " + id + " ";
+        const bool is_page = id == "page";
+
+
+        const QString title = el.attribute("title");
+        QRegularExpressionMatch match = _bbox_rex.match(title);
+        if (match.hasMatch() && match.capturedLength() >= 5) {
+            int x0, y0, x1, y1;
+            bool ok;
+            x0 = match.captured(1).toInt(&ok);
+            assert(ok);
+            y0 = match.captured(2).toInt(&ok);
+            assert(ok);
+            x1 = match.captured(3).toInt(&ok);
+            assert(ok);
+            y1 = match.captured(4).toInt(&ok);
+            assert(ok);
+
+            if (is_page) {
+                _cur_page_h = y1;
+            } else {
+                // (0,0) point is top-left in hOCR and bottom-left in djvused
+                assert(_cur_page_h > 0);
+                const int h = y1-y0;
+                y0 = _cur_page_h - y0 - h;
+                y1 = _cur_page_h - y1 + h;
+            }
+
+            bbox = QString("%1 %2 %3 %4").arg(x0).arg(y0).arg(x1).arg(y1);
         }
 
-        bbox = QString("%1 %2 %3 %4").arg(x0).arg(y0).arg(x1).arg(y1);
-    }
-
-    if (!bbox.isEmpty()) {
-        res += bbox + " ";
+        if (!bbox.isEmpty()) {
+            res += bbox + " ";
+        }
     }
 
     if (id == "word") {
@@ -76,19 +81,25 @@ void hOCR2DjVuSed(const QDomElement& el, QTextStream& ts, int indent)
         const QDomNodeList children = el.childNodes();
         ts << res;
         bool child_found = false;
+        const int incr = ignore ? 0 : 1;
         for (int i = 0; i < children.size(); i++) {
             if (children.at(i).isElement()) {
                 if (!child_found) {
                     child_found = true;
                     ts << "\n";
                 }
-                hOCR2DjVuSed(children.at(i).toElement(), ts, indent + 1);
+
+                hOCR2DjVuSed(children.at(i).toElement(), ts, indent + incr);
             }
         }
-        if (child_found) {
-            ts << indent_str << ")\n";
-        } else {
-            ts << " )\n";
+
+
+        if (!ignore) {
+            if (child_found) {
+                ts << indent_str << ")\n";
+            } else {
+                ts << " )\n";
+            }
         }
     }
 }
