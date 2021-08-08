@@ -74,7 +74,10 @@ void hOCR2DjVuSed(const QDomElement& el, QTextStream& ts, int indent)
         assert(!bbox.isEmpty()); // some tesseract versions use two word tags one inside other
                                  // see: https://github.com/jwilk/ocrodjvu/blob/master/tests/hocr2djvused
                                  // the second one has no bbox and I hope it'll be omitted by text()
-        res += "\""+ el.text() + "\"";
+        res += "\""+ el.text().
+                replace("\\", "\\\\"). // escape '\'
+                replace("\"", "\\\"") // escape '"'
+                + "\"";
         ts << res << " )\n";
     } else {
 
